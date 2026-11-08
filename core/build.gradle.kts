@@ -1,5 +1,6 @@
 plugins {
     id("java-library")
+    id("java-test-fixtures")
     id("maven-publish")
 }
 
@@ -15,6 +16,7 @@ tasks.withType<JavaCompile>().configureEach {
 dependencies {
     compileOnly(libs.pedro.core)
 
+    testFixturesImplementation(libs.pedro.core)
     testImplementation(libs.pedro.core)
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
@@ -30,6 +32,11 @@ publishing {
         create<MavenPublication>("release") {
             artifactId = "pathrecorder-core"
             from(components["java"])
+            suppressAllPomMetadataWarnings()
         }
     }
 }
+
+val javaComponent = components["java"] as AdhocComponentWithVariants
+javaComponent.withVariantsFromConfiguration(configurations["testFixturesApiElements"]) { skip() }
+javaComponent.withVariantsFromConfiguration(configurations["testFixturesRuntimeElements"]) { skip() }
