@@ -1,0 +1,30 @@
+import com.pedropathing.api.Paths;
+import com.pedropathing.api.PoseFactory;
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.commands.Commands;
+import com.pedropathing.ivy.groups.Groups;
+import com.pedropathing.ivy.pedro.PedroCommands;
+import com.pedropathing.math.Pose;
+import com.pedropathing.paths.Path;
+
+PoseFactory poses = PoseFactory.degrees();
+
+Pose start = poses.of(20.0, 20.0, 90.0);
+Pose p1 = poses.of(80.0, 110.0, 0.2);
+Pose p2 = poses.of(74.8, 109.5, 0.2);
+
+Path path1 = Paths.path(
+        Paths.curve(start, new Pose(20.2, 35.5), new Pose(17.5, 57.9), new Pose(21.7, 72.3)),
+        Paths.curve(new Pose(21.7, 72.3), new Pose(28.9, 96.6), new Pose(56.1, 110.2), p1)).tangent();
+Path path2 = Paths.path(
+        Paths.curve(p1, new Pose(117.9, 108.6), new Pose(120.5, 52.1), new Pose(81.4, 50.0)),
+        Paths.curve(new Pose(81.4, 50.0), new Pose(43.7, 47.9), new Pose(39.3, 103.2), p2)).constant(Math.toRadians(0.1));
+
+Command auto = Groups.sequential(
+        Groups.parallel(
+                PedroCommands.follow(follower, path1),
+                Commands.waitUntil(() -> !follower.following() || follower.pathIndex() > 0 || follower.pathIndex() == 0 && follower.parametricCompletion() >= 0.710).then(intake.collect()),
+                Commands.waitUntil(() -> !follower.following() || follower.pathIndex() > 1 || follower.pathIndex() == 1 && follower.parametricCompletion() >= 0.488).then(lift.score())),
+        Groups.parallel(
+                PedroCommands.follow(follower, path2),
+                Commands.waitUntil(() -> !follower.following() || follower.pathIndex() > 1 || follower.pathIndex() == 1 && follower.parametricCompletion() >= 0.174).then(claw.open())));

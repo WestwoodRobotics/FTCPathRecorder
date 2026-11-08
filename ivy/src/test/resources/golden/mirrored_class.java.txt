@@ -1,0 +1,32 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.pedropathing.api.Paths;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.groups.Groups;
+import com.pedropathing.ivy.pedro.PedroCommands;
+import com.pedropathing.math.Pose;
+import com.pedropathing.paths.Path;
+
+public final class RecordedAuto {
+    private RecordedAuto() {}
+
+    public static Pose start() {
+        return new Pose(134.0, 30.0, 0.0000);
+    }
+
+    public static Command create(Follower follower, Intake intake, Lift lift, Claw claw) {
+        Pose start = new Pose(134.0, 30.0, 0.0000);
+        Pose p1 = new Pose(54.0, 70.0, -1.5760);
+        Pose p2 = new Pose(104.0, 100.0, -1.5638);
+
+        Path path1 = Paths.curve(start, new Pose(94.8, 31.4), new Pose(56.1, 17.3), p1).reverseTangent();
+        // heading error 0.2932 rad
+        Path path2 = Paths.line(p1, p2).linear(p1, p2);
+
+        return Groups.sequential(
+                PedroCommands.follow(follower, path1),
+                claw.open(),
+                PedroCommands.follow(follower, path2));
+    }
+}

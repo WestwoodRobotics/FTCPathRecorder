@@ -1,0 +1,29 @@
+import com.pedropathing.api.Paths;
+import com.pedropathing.api.PoseFactory;
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.commands.Commands;
+import com.pedropathing.ivy.groups.Groups;
+import com.pedropathing.ivy.pedro.PedroCommands;
+import com.pedropathing.math.Pose;
+import com.pedropathing.paths.Path;
+import com.pedropathing.utils.Angle;
+
+PoseFactory poses = PoseFactory.degrees();
+
+Pose start = poses.of(8.0, 72.0, 0.0);
+Pose p1 = poses.of(40.0, 72.0, 0.0);
+Pose p2 = poses.of(40.0, 72.0, 90.0);
+Pose p3 = poses.of(40.0, 110.0, 90.0);
+
+Path path1 = Paths.line(start, p1).tangent();
+Path path2 = Paths.line(p2, p3).tangent();
+
+Command auto = Groups.sequential(
+        PedroCommands.follow(follower, path1),
+        intake.collect(),
+        PedroCommands.hold(follower, p2),
+        Groups.race(
+                Commands.waitUntil(() -> Math.abs(Angle.normalizeSigned(follower.pose().heading() - p2.heading())) < Math.toRadians(3.0)),
+                Commands.waitMs(1000)),
+        lift.score(),
+        PedroCommands.follow(follower, path2));

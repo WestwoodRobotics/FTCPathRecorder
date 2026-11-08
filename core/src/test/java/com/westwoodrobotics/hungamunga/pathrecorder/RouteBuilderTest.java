@@ -4,12 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.pedropathing.math.Pose;
+import com.pedropathing.paths.curves.bezier.BezierCurve;
 import com.westwoodrobotics.hungamunga.pathrecorder.SyntheticTrace.Heading;
+import com.westwoodrobotics.hungamunga.pathrecorder.fit.Vec2;
 import com.westwoodrobotics.hungamunga.pathrecorder.route.HeadingMode;
 import com.westwoodrobotics.hungamunga.pathrecorder.route.PathIR;
 import com.westwoodrobotics.hungamunga.pathrecorder.route.RouteBuilder;
 import com.westwoodrobotics.hungamunga.pathrecorder.route.RouteIR;
 import com.westwoodrobotics.hungamunga.pathrecorder.route.Step;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class RouteBuilderTest {
@@ -87,6 +91,20 @@ class RouteBuilderTest {
         assertEquals(0.5, path.actions.get(0).completion, 0.02);
         assertEquals(0.8, path.actions.get(1).completion, 0.02);
         assertEquals("lift.score()", path.actions.get(0).expression);
+    }
+
+    @Test
+    void completionMatchesPedroArcLength() {
+        RouteIR route = build(SyntheticTrace.start(42, 72, 0)
+                .arcAround(72, 72, 150).actionAt(0.35, "lift.score()").drive(Heading.TANGENT, 30));
+        PathIR path = route.paths.get(0);
+        assertEquals(1, path.pieces.size());
+        List<Vec2> cp = path.pieces.get(0).controlPoints();
+        Pose[] poses = new Pose[cp.size()];
+        for (int i = 0; i < poses.length; i++) poses[i] = new Pose(cp.get(i).x, cp.get(i).y);
+        double pedro = new BezierCurve(poses).pathCompletion(path.actions.get(0).t);
+        assertEquals(pedro, path.actions.get(0).completion, 0.005);
+        assertEquals(0.35, pedro, 0.02);
     }
 
     @Test
