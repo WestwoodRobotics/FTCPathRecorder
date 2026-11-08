@@ -5,7 +5,7 @@ pedro = "3.0.2"
 ivy = "1.1.1"
 panels = "1.0.10"
 junit = "5.11.4"
-mockito = "5.14.2"
+mockito = "5.20.0"
 
 [libraries]
 pedro-core = { module = "com.pedropathing:core", version.ref = "pedro" }

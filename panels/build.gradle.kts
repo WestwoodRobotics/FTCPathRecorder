@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.westwoodrobotics.hungamunga.pathrecorder.panels"
+    namespace = "org.westwoodrobots.pathrecorder.panels"
     compileSdk = 34
 
     defaultConfig {

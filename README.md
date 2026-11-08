@@ -28,9 +28,9 @@ repositories {
 dependencies {
     implementation 'com.pedropathing:revhub:3.0.2'
     implementation 'com.pedropathing.ivy:pedro:1.1.1'
-    implementation 'com.westwoodrobotics.hungamunga:pathrecorder-ftc:0.1.0'
-    implementation 'com.westwoodrobotics.hungamunga:pathrecorder-ivy:0.1.0'
-    implementation 'com.westwoodrobotics.hungamunga:pathrecorder-panels:0.1.0'
+    implementation 'org.westwoodrobots:pathrecorder-ftc:0.1.0'
+    implementation 'org.westwoodrobots:pathrecorder-ivy:0.1.0'
+    implementation 'org.westwoodrobots:pathrecorder-panels:0.1.0'
 }
 ```
 
@@ -38,8 +38,9 @@ The `panels` module is optional. Add it only if your project uses [Panels](https
 
 The library uses `compileOnly` for Pedro, Ivy, Panels and the FTC SDK. Your project supplies these at runtime.
 
-The group `com.westwoodrobotics.hungamunga` needs a JitPack custom domain. Without one, JitPack serves the modules as
-`com.github.<owner>.PathRecorder:pathrecorder-<module>:<tag>`. To change the group, edit `group` in `gradle.properties`.
+These coordinates need a JitPack custom domain for `westwoodrobots.org`. Add a DNS TXT record on `git.westwoodrobots.org`
+with the URL of the GitHub account or organization that owns the repo. Without the custom domain, JitPack serves the
+modules as `com.github.<owner>.PathRecorder:pathrecorder-<module>:<tag>`.
 
 ## Compatibility
 

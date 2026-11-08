@@ -6,10 +6,10 @@ import com.pedropathing.ivy.Scheduler;
 import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.westwoodrobotics.hungamunga.pathrecorder.RecorderConfig;
-import com.westwoodrobotics.hungamunga.pathrecorder.ftc.PathRecorder;
-import com.westwoodrobotics.hungamunga.pathrecorder.ivy.IvyRuntime;
-import com.westwoodrobotics.hungamunga.pathrecorder.panels.PanelsOverlay;
+import org.westwoodrobots.pathrecorder.RecorderConfig;
+import org.westwoodrobots.pathrecorder.ftc.PathRecorder;
+import org.westwoodrobots.pathrecorder.ivy.IvyRuntime;
+import org.westwoodrobots.pathrecorder.panels.PanelsOverlay;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 @TeleOp(name = "Record Auto", group = "PathRecorder")

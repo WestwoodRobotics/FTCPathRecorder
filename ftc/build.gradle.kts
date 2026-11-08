@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.westwoodrobotics.hungamunga.pathrecorder.ftc"
+    namespace = "org.westwoodrobots.pathrecorder.ftc"
     compileSdk = 34
 
     defaultConfig {
