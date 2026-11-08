@@ -1,0 +1,28 @@
+[versions]
+agp = "8.13.2"
+ftc = "12.0.0"
+pedro = "3.0.2"
+ivy = "1.1.1"
+panels = "1.0.10"
+junit = "5.11.4"
+mockito = "5.14.2"
+
+[libraries]
+pedro-core = { module = "com.pedropathing:core", version.ref = "pedro" }
+ivy-core = { module = "com.pedropathing.ivy:core", version.ref = "ivy" }
+ivy-pedro = { module = "com.pedropathing.ivy:pedro", version.ref = "ivy" }
+panels-field = { module = "com.bylazar:field", version.ref = "panels" }
+ftc-robotcore = { module = "org.firstinspires.ftc:RobotCore", version.ref = "ftc" }
+ftc-hardware = { module = "org.firstinspires.ftc:Hardware", version.ref = "ftc" }
+ftc-ftccommon = { module = "org.firstinspires.ftc:FtcCommon", version.ref = "ftc" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+
+[bundles]
+ftc = ["ftc-robotcore", "ftc-hardware", "ftc-ftccommon"]
+
+[plugins]
+android-library = { id = "com.android.library", version.ref = "agp" }
+android-application = { id = "com.android.application", version.ref = "agp" }
