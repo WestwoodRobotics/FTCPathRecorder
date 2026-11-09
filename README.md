@@ -1,12 +1,13 @@
 ## PathRecorderFTC
 
-Turns routes driven by drivers into Java code for a
-[Pedro Pathing 3](https://github.com/Pedro-Pathing/PedroPathing) autonomous with
-[Ivy](https://github.com/Pedro-Pathing/Ivy) commands.
+Converts a driver's route into Java code for a
+[Pedro Pathing 3](https://github.com/Pedro-Pathing/PedroPathing) autonomous programs using
+[Ivy](https://github.com/Pedro-Pathing/Ivy) commands. The recorder logs odometry poses alongside
+button actions, fits smooth curves to those coordinates, and automatically generates the code.
 
 ### Install
 
-Add JitPack to `TeamCode/build.gradle` (or to `build.dependencies.gradle` in the Quickstart):
+Add these lines to `TeamCode/build.gradle` (or to `build.dependencies.gradle` in the Quickstart):
 
 ```groovy
 repositories {
@@ -22,23 +23,18 @@ dependencies {
 }
 ```
 
-`panels` module is optional. Add only if your team uses [Panels](https://github.com/ftcontrol/ftcontrol-panels).
-
-The library uses `compileOnly` for Pedro, Ivy, Panels and the FTC SDK. Your project supplies these at runtime.
+The `panels` module is optional, only if your team uses [Panels](https://github.com/ftcontrol/ftcontrol-panels).
 
 ### Compatibility
 
-| Dependency | Version | Source |
-|---|---|---|
-| Pedro Pathing | 3.0.2 | `v3.0.2` (`cf4be31`) |
-| Ivy | 1.1.1 | `v1.1.1` (`d35242a`) |
-| Panels field plugin | 1.0.10 | `mymaven.bylazar.com` (`a68ed55`) |
-| FTC SDK | 12.0.0 | `v3.0.2` |
-| Android Gradle Plugin | 8.13.2 | same as Quickstart |
-| Java | source and target 1.8 | same as Quickstart |
-
-Use Pedro 3.0.2 or later. The Quickstart `v3.0.2` still uses `revhub:3.0.1`. In Pedro 3.0.1, `linear` heading moves with the
-curve parameter `t`. In 3.0.2 it moves with arc length, and the heading classifier uses arc length.
+| Dependency            | Version               | Source                                        |
+|-----------------------|-----------------------|-----------------------------------------------|
+| Pedro Pathing         | 3.0.2+                | tag `v3.0.2`, commit `cf4be31`                |
+| Ivy                   | 1.1.1                 | tag `v1.1.1`, commit `d35242a`                |
+| Panels field plugin   | 1.0.10                | Maven `mymaven.bylazar.com`, commit `a68ed55` |
+| FTC SDK               | 12.0.0                | Pedro Quickstart `v3.0.2`                     |
+| Android Gradle Plugin | 8.13.2                | Pedro Quickstart `v3.0.2`                     |
+| Java                  | source and target 1.8 | Pedro Quickstart `v3.0.2`                     |
 
 ### Quick start
 
@@ -56,58 +52,61 @@ recorder = new PathRecorder<>(follower, new Pose(8, 72, 0), config, IvyRuntime.o
 recorder.update(gamepad1, telemetry);
 telemetry.update();
 ```
+Args of `action`:
+1. text that the generator writes into the output. Must be a valid Java expr where `follower` and your subsystems are in scope.
+2. (the trigger), recorder fires the action only when the trigger changes from `false` to `true`.
+3. supplies a new `Command` each time the trigger fires, scheduled by the recorder.
 
-- The first arg of `action` is the Java expr that the generator writes into the output, must be valid.
-- The last arg supplies a new `Command` for each push, scheduled by the recorder.
-- Trigger is fired on the rising edge.
-- The constructor calls `follower.setPose(start)`. `update` calls `follower.manual(...)` and `follower.update()`. Do not call them again in the same loop.
-- `IvyRuntime.owned()` calls `Scheduler.execute()` in `update`. If your code already calls `Scheduler.execute()`, use `IvyRuntime.external()`. `Scheduler` is static, so call `Scheduler.reset()` in `init()`.
-- The default stick mapping is the mapping of the Pedro localization test. For field-centric drive, use `.drive(DriveInput.fieldCentric(0))`, or give your own `DriveInput`.
+Additionally:
+- Constructor calls `follower.setPose(start)`. `update` calls `follower.manual(...)` and `follower.update()`. Do not call these methods yourself in the same loop.
+- `IvyRuntime.owned()` makes `update` call `Scheduler.execute()`. If your code already calls `Scheduler.execute()`, use `IvyRuntime.external()`.
+- `Scheduler` is static and keeps commands from an earlier OpMode. Call `Scheduler.reset()` in `init()`.
+- The default stick mapping is Pedro's (robot-centric). For field-centric drive, use `.drive(DriveInput.fieldCentric(0))`, or supply your own `DriveInput`.
 
-When the driver pushes the finish button (or the OpMode stops and calls `finish()`):
+When the driver presses the finish button, or when the OpMode stops and calls `finish()`:
 
-- Code goes to `/sdcard/FIRST/pathrecorder/<timestamp>.java` on the Control Hub. Use `adb pull /sdcard/FIRST/pathrecorder`.
-- `http://192.168.43.1:8080/pathrecorder` will display the newest file
+- The code is written to `/sdcard/FIRST/pathrecorder/<timestamp>.java` on the Control Hub. Get it with `adb pull /sdcard/FIRST/pathrecorder`.
+- `http://192.168.43.1:8080/pathrecorder` shows the newest file.
 
-The output format should be imports first, statements in a method in scope of follower/subsystem, and command is scheduled, and setPose() is called.
+The default output (`config.style = OutputStyle.SNIPPET`) has the imports first, then statements to paste into a method where `follower` and your subsystems are in scope. The statements call `follower.setPose(...)`, build the paths, and schedule the command.
 
-With `config.style = OutputStyle.CLASS` you get a class with `start()` and `create(Follower, ...)` instead.
+With `config.style = OutputStyle.CLASS`, output is a complete class with the methods `create(Follower, ...)` and `start()`.
 
 ### Configuration
 
 All settings are public fields of `RecorderConfig`.
 
-| Field | Default | Meaning |
-|---|---|---|
-| `positionTolerance` | `1.0` | Maximum distance (in) from a recorded point to the fitted curve |
-| `headingTolerance` | `3.0` | RMS heading error (deg) for a heading mode, and the turn tolerance |
-| `stopSpeed` | `1.5` | Speed (in/s) below which the robot is stopped |
-| `minStopTime` | `150` | Minimum stop time (ms) that splits a path |
-| `sampleInterval` | `0` | Minimum time (ms) between samples, `0` records every loop |
-| `degrees` | `true` | Degrees through `PoseFactory.degrees()`, or radians through `new Pose(...)` |
-| `mirrorAxis` | `NaN` | Mirror the output with `PoseFactory.mirrorX(axis)`, for example `72` for the other alliance |
-| `style` | `SNIPPET` | `SNIPPET` or `CLASS` |
-| `followerName`, `commandName`, `startName`, `poseName`, `pathName` | `follower`, `auto`, `start`, `p`, `path` | Names in the output |
-| `packageName`, `className`, `parameters`, `imports` | | Settings for `CLASS` output, for example `parameters.add("Claw claw")` |
-| `outputDirectory` | `/sdcard/FIRST/pathrecorder` | Directory for the files |
-| `livePreview` | `true` | Fit the route again at each stop for the overlay |
+| Field | Default | Meaning                                                                                                        |
+|---|---|----------------------------------------------------------------------------------------------------------------|
+| `positionTolerance` | `1.0` | Maximum distance (in) from a recorded point to the fitted curve                                                |
+| `headingTolerance` | `3.0` | Maximum RMS heading error (deg) for a heading mode. Also the end tolerance of an in-place turn                 |
+| `stopSpeed` | `1.5` | Speed (in/s) below which the robot counts as stopped                                                           |
+| `minStopTime` | `150` | Minimum stop time (ms) that splits a path                                                                      |
+| `sampleInterval` | `0` | Minimum time (ms) between samples. `0` records each loop                                                       |
+| `degrees` | `true` | `true`: poses in degrees with `PoseFactory.degrees()`. `false`: poses in radians with `new Pose(...)`          |
+| `mirrorAxis` | `NaN` | Mirrors the output with `PoseFactory.mirrorX(axis)`, for example `72` for the other alliance. `NaN`: no mirror |
+| `style` | `SNIPPET` | `SNIPPET` or `CLASS` (see [Quick start](#quick-start))                                                         |
+| `followerName`, `commandName`, `startName`, `poseName`, `pathName` | `follower`, `auto`, `start`, `p`, `path` | Variable names in the output                                                                                   |
+| `packageName`, `className`, `parameters`, `imports` | | `CLASS` output only. For example `parameters.add("Claw claw")`                                                 |
+| `outputDirectory` | `/sdcard/FIRST/pathrecorder` | Directory for output files                                                                                     |
+| `livePreview` | `true` | Fits the route again at each stop to update the overlay                                                        |
 
 ### Notes
 
-- A short pause (less than `minStopTime`) with no turn does not split a path.
-- A stop with a heading change becomes `PedroCommands.hold` and a wait for the heading, with a timeout of two times the recorded turn time (500 ms minimum).
-- A waypoint during motion splits the path into two paths. Pedro can slow the robot at the end of each path.
-- The robot waits at each stop until the actions of the stop are done. The recorded wait time is not in the output.
-- A path with an action during motion is a `Groups.parallel`. The next step starts only when all actions of that path are done.
-- One path can contain more than one Bézier curve as `Paths.path(...)`. In Pedro 3.0.2, `follower.completion()` is not correct for such a path. For these paths the output uses `follower.pathIndex()` and `follower.parametricCompletion()` instead.
-- The output depends on `follower.update()` in each loop. `follower.completion()` is `1.0` until the first update after `follow()`, the same as `PedroCommands.follow`.
-- A path that crosses itself can place an action at the wrong crossing.
-- If no heading mode is inside the tolerance, the output uses `linear` and a `// heading error` note with the measured RMS error.
-- Odometry drift goes into the output. The output is only as good as your localizer.
+- Pauses < `minStopTime` with no turn does not split a path.
+- Stops with rx changes -> `PedroCommands.hold` + a wait until rx is in tolerance
+- Waypoints anywhere split up the path, but unnecessary waypoints can make the route slower due to Pedro's braking math.
+- At stops, the robot waits until all actions of that stop are done; we exclude this.
+- Path with actions during motion -> `Groups.parallel`, where next step only starts when all previous action finishes
+- `Paths.path(...)` allows for more than one Bezier in the path. In Pedro 3.0.2, `follower.completion()` is not correct for such a path, so we use `follower.pathIndex()` and `follower.parametricCompletion()` for it.
+- Requires `follower.update()` in each loop. `follower.completion()` is `1.0` until the first update after `follow()`. `PedroCommands.follow` has the same requirement.
+- If a path crosses itself, an action can be placed at the wrong crossing.
+- If no heading mode is in tolerance, default `linear` and adds a `// heading error` comment with the measured RMS error.
+- Odom drift is accounted for. Requires a very finely tuned localizer.
 
 ### Competition rules
 
-During a match, the Competition Manual (R704) does not permit live data streams other than Driver Station telemetry. **Do not put any recorders in a competition OpMode.**
+**Never use `PathRecorder` in a competition OpMode,** recording is prohibited by R704.
 
 ### License
 
